@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14120f"/>
+      <stop offset="1" stop-color="#1e1b17"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.2" r="0.9">
+      <stop offset="0" stop-color="#d9b44a" stop-opacity="0.15"/>
+      <stop offset="1" stop-color="#d9b44a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect x="40" y="40" width="1120" height="550" fill="none" stroke="#d9b44a" stroke-opacity="0.3" stroke-width="2" rx="20"/>
+  <circle cx="600" cy="210" r="55" fill="#d9b44a" fill-opacity="0.12" stroke="#d9b44a" stroke-width="2"/>
+  <text x="600" y="230" text-anchor="middle" font-family="Georgia, serif" font-size="52" font-weight="700" fill="#d9b44a">L1</text>
+  <text x="600" y="370" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="96" font-weight="600" fill="#f2eee5">LLB 1 Hub</text>
+  <text x="600" y="440" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="26" fill="#a49e92" letter-spacing="4">FACULTY OF LAW · UNIPORT</text>
+  <text x="600" y="530" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#807a6e">Course hub for LLB 1</text>
+</svg>
