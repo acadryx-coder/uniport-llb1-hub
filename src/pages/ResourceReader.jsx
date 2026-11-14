@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { Link, useParams, Navigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import { parseLegalMD, validateMD } from '../lib/markdown.js'
@@ -23,7 +23,6 @@ export default function ResourceReader() {
   useDocumentTitle(resource ? resource.name : 'Resource')
 
   useEffect(() => {
-    // Fetch course and resource from Supabase
     supabase.from('courses').select('*').eq('slug', courseSlug).single().then(({ data: c }) => {
       setCourse(c)
       supabase.from('resources').select('*').eq('course_slug', courseSlug).eq('slug', resourceSlug).single().then(({ data: r }) => {
@@ -34,6 +33,7 @@ export default function ResourceReader() {
     })
   }, [courseSlug, resourceSlug])
 
+  // Restore scroll position for EVERYONE (guests and logged-in)
   useEffect(() => {
     if (!resource) return
     const el = bodyRef.current
@@ -48,8 +48,9 @@ export default function ResourceReader() {
     })
   }, [resource])
 
+  // Track and save scroll position for EVERYONE
   useEffect(() => {
-    if (!resource || !user) return
+    if (!resource) return
     let timer = null
     const el = bodyRef.current
     if (!el) return
@@ -58,6 +59,7 @@ export default function ResourceReader() {
       const max = el.scrollHeight - el.clientHeight
       const p = max > 0 ? Math.min(100, Math.round((el.scrollTop / max) * 100)) : 100
       setPct(p)
+      
       clearTimeout(timer)
       timer = setTimeout(() => {
         saveProgress(resource.id, {
@@ -73,7 +75,7 @@ export default function ResourceReader() {
       el.removeEventListener('scroll', onScroll)
       clearTimeout(timer)
     }
-  }, [resource, user])
+  }, [resource])
 
   if (loading) return <div className="reader-page"><div className="empty">Loading resource…</div></div>
 
