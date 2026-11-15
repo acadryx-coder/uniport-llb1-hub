@@ -4,6 +4,10 @@ function escapeHtml(s) {
   }[c]))
 }
 
+function slugify(text) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
 function inline(text) {
   let s = escapeHtml(text)
   s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>')
@@ -23,21 +27,21 @@ function inline(text) {
 
 const blockRules = [
   {
-    // Updated: Now catches headings even if the paragraph is directly below it
     test: (lines) => /^#{1,4}\s+\S/.test(lines[0]),
     render: (lines) => {
       const m = lines[0].match(/^(#{1,4})\s+(.+)$/)
       const lvl = m[1].length
-      const num = m[2].match(/^(\d+(?:\.\d+)*)\s+(.+)$/)
+      const text = m[2]
+      const id = slugify(text.replace(/\d+(\.\d+)*\s*/, '')) // remove numbers for cleaner ids
+      const num = text.match(/^(\d+(?:\.\d+)*)\s+(.+)$/)
       
       let html = ''
       if (num) {
-        html = `<h${lvl} class="numbered"><span class="secnum">${num[1]}</span>${inline(num[2])}</h${lvl}>`
+        html = `<h${lvl} id="${id}" class="numbered"><span class="secnum">${num[1]}</span>${inline(num[2])}</h${lvl}>`
       } else {
-        html = `<h${lvl}>${inline(m[2])}</h${lvl}>`
+        html = `<h${lvl} id="${id}">${inline(text)}</h${lvl}>`
       }
       
-      // If there are more lines in this block, render them as a paragraph
       if (lines.length > 1) {
         html += `<p>${inline(lines.slice(1).join('\n')).replace(/\n/g, '<br>')}</p>`
       }
@@ -78,7 +82,7 @@ const blockRules = [
     test: (lines) => /^§\s+/.test(lines[0]),
     render: (lines) => {
       const label = lines[0].replace(/^§\s+/, '').trim()
-      const id = 'sec-' + label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      const id = 'sec-' + slugify(label)
       const rest = lines.slice(1).join('\n').trim()
       let html = `<div class="statute-sec" id="${id}"><span class="statute-sec-num">${inline(label)}</span>`
       if (rest) html += `<p>${inline(rest).replace(/\n/g, '<br>')}</p>`
@@ -171,44 +175,4 @@ export function parseLegalMD(md) {
     )
   }
   return out.join('\n')
-}
-
-export function validateMD(md) {
-  if (!md) return []
-  const issues = []
-  const lines = md.split('\n')
-  const fnDefs = {}, fnRefs = {}, sections = {}
-
-  lines.forEach((l) => {
-    const sec = l.match(/^§\s+(.+)$/)
-    if (sec) sections[sec[1].trim()] = true
-    const num = l.match(/^#{2,4}\s+(\d+(?:\.\d+)*)\s/)
-    if (num) sections[num[1]] = true
-    const fd = l.match(/^\[\^([a-zA-Z0-9]+)\]:/)
-    if (fd) fnDefs[fd[1]] = true
-    const refs = l.match(/\[\^[a-zA-Z0-9]+\]/g)
-    if (refs) refs.forEach((r) => { fnRefs[r.replace(/[\[\]^]/g, '')] = true })
-  })
-
-  lines.forEach((l, i) => {
-    const n = i + 1
-    if (/^#{5,}\s/.test(l)) issues.push({ line: n, issue: 'Heading deeper than #### not supported' })
-    if (/^:::\s/.test(l)) issues.push({ line: n, issue: '::: is not a directive — use !!! for callouts' })
-    if ((l.match(/\*\*/g) || []).length % 2) issues.push({ line: n, issue: 'Unbalanced ** (bold)' })
-    if ((l.match(/==/g) || []).length % 2) issues.push({ line: n, issue: 'Unbalanced == (highlight)' })
-    const xrefs = l.match(/\[\[([^\]\n]+)\]\]/g)
-    if (xrefs) xrefs.forEach((x) => {
-      const target = x.replace(/^\[\[|\]\]$/g, '').replace(/^§\s+/, '').trim()
-      if (!sections[target]) issues.push({ line: n, issue: `Cross-ref to missing section: ${target}` })
-    })
-  })
-
-  Object.keys(fnRefs).forEach((k) => {
-    if (!fnDefs[k]) issues.push({ line: 0, issue: `Footnote [${k}] referenced but never defined` })
-  })
-  Object.keys(fnDefs).forEach((k) => {
-    if (!fnRefs[k]) issues.push({ line: 0, issue: `Footnote [${k}] defined but never referenced` })
-  })
-
-  return issues
 }

@@ -16,6 +16,7 @@ export default function ResourceReader() {
   const [pct, setPct] = useState(0)
   const [issues, setIssues] = useState([])
   const [showQuiz, setShowQuiz] = useState(false)
+  const [showTOC, setShowTOC] = useState(false)
   
   const { user } = useAuth()
   const location = useLocation()
@@ -33,7 +34,32 @@ export default function ResourceReader() {
     })
   }, [courseSlug, resourceSlug])
 
-  // Restore scroll position for EVERYONE (guests and logged-in)
+  // Extract Table of Contents from Markdown
+  const toc = useMemo(() => {
+    if (!resource || !resource.md) return []
+    const headings = []
+    const lines = resource.md.split('\n')
+    lines.forEach(line => {
+      const match = line.match(/^(#{1,3})\s+(.+)$/)
+      if (match) {
+        const level = match[1].length
+        const text = match[2]
+        const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+        headings.push({ level, text, id })
+      }
+    })
+    return headings
+  }, [resource])
+
+  const jumpToHeading = (id) => {
+    setShowTOC(false)
+    const el = document.getElementById(id)
+    if (el) {
+      // Scroll within the reader container
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
   useEffect(() => {
     if (!resource) return
     const el = bodyRef.current
@@ -48,7 +74,6 @@ export default function ResourceReader() {
     })
   }, [resource])
 
-  // Track and save scroll position for EVERYONE
   useEffect(() => {
     if (!resource) return
     let timer = null
@@ -135,7 +160,7 @@ export default function ResourceReader() {
         <div className="reader-preview-banner">
           <div className="reader-preview-text">
             <strong>Preview Mode</strong>
-            <span>You're reading a public resource. Log in to unlock the full library, timetable, and class tools.</span>
+            <span>You're reading a public resource. Log in to unlock the full library.</span>
           </div>
           <Link to="/login" state={{ from: `/materials/${courseSlug}/${resourceSlug}` }} className="btn sm">
             Log in
@@ -143,7 +168,7 @@ export default function ResourceReader() {
         </div>
       )}
 
-      <div className="reader-body" ref={bodyRef} style={{ paddingBottom: resource.quiz ? '100px' : '60px' }}>
+      <div className="reader-body" ref={bodyRef} style={{ paddingBottom: (resource.quiz || toc.length > 0) ? '120px' : '60px' }}>
         {issues.length > 0 && (
           <div className="reader-warn">
             <strong>Formatting check:</strong> {issues.length} issue{issues.length === 1 ? '' : 's'} in the source. First: {issues[0].issue}
@@ -152,15 +177,63 @@ export default function ResourceReader() {
         <div className="doc" dangerouslySetInnerHTML={{ __html: html }} />
       </div>
 
-      {resource.quiz && (
-        <button className="floating-quiz-btn" onClick={() => setShowQuiz(true)}>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
-          Quiz
-        </button>
+      {/* Floating Buttons Container */}
+      <div style={{ position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))', right: 20, display: 'flex', flexDirection: 'column', gap: 12, zIndex: 50 }}>
+        {toc.length > 0 && (
+          <button className="floating-quiz-btn" style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--line-2)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }} onClick={() => setShowTOC(true)}>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            Contents
+          </button>
+        )}
+        
+        {resource.quiz && (
+          <button className="floating-quiz-btn" onClick={() => setShowQuiz(true)}>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            Quiz
+          </button>
+        )}
+      </div>
+
+      {/* TOC Modal */}
+      {showTOC && (
+        <div className="modal-backdrop" onClick={() => setShowTOC(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '80vh', padding: 0 }}>
+            <div className="toc-head" style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontFamily: 'var(--serif)', fontSize: '1.2rem' }}>Table of Contents</h3>
+              <button className="icon-btn" onClick={() => setShowTOC(false)}>×</button>
+            </div>
+            <div style={{ overflowY: 'auto', padding: '10px 0' }}>
+              {toc.map((item, i) => (
+                <div 
+                  key={i} 
+                  onClick={() => jumpToHeading(item.id)}
+                  style={{ 
+                    padding: `10px 20px`, 
+                    paddingLeft: `${20 + (item.level - 1) * 16}px`,
+                    cursor: 'pointer',
+                    borderBottom: '1px solid var(--line)',
+                    fontSize: item.level === 1 ? '1rem' : item.level === 2 ? '0.9rem' : '0.85rem',
+                    fontWeight: item.level === 1 ? '700' : item.level === 2 ? '600' : '400',
+                    color: item.level === 1 ? 'var(--acc)' : 'var(--ink)'
+                  }}
+                >
+                  {item.text}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       <QuizModal 
