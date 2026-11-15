@@ -1675,3 +1675,73 @@ footer strong{color:var(--mute)}
 .toc-text {
   color: var(--ink);
 }
+
+/* ================================================================
+   Final Ghost Button Fix (Primary Color Text)
+   ================================================================ */
+.btn.ghost, .btn-ghost {
+  background: transparent !important;
+  color: var(--acc) !important;
+  border: 1px solid var(--line-2) !important;
+}
+.btn.ghost:hover, .btn-ghost:hover {
+  background: var(--acc-soft) !important;
+  border-color: var(--acc) !important;
+}
+
+/* ================================================================
+   Reader Header Typography Fix
+   ================================================================ */
+.reader-course {
+  display: none; /* Hide the noisy "LAW 101 · TEXTBOOK" breadcrumb */
+}
+.reader-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: normal !important; /* Allow wrapping */
+  line-height: 1.3;
+  text-align: left;
+}
+.reader-title-wrap {
+  padding-right: 12px; /* Give it breathing room */
+}
+
+/* Cover Page Styling */
+.cover-page {
+  text-align: center;
+  padding: 60px 20px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+}
+.cover-title {
+  font-family: var(--serif);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--acc);
+  margin: 0 0 10px !important;
+  border: none !important;
+  line-height: 1.1;
+}
+.cover-subtitle {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  color: var(--ink);
+  margin: 0 0 30px !important;
+  border: none !important;
+  font-weight: 400;
+}
+.cover-meta {
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  color: var(--mute);
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+.cover-meta strong {
+  color: var(--ink);
+  font-weight: 600;
+}

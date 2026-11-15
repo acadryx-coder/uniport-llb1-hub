@@ -27,23 +27,28 @@ function inline(text) {
 
 const blockRules = [
   {
-    // Custom Cover Page Block
     test: (lines) => /^:::\s*cover/i.test(lines[0]),
     render: (lines) => {
-      // Extract content between ::: cover and :::
       let content = lines.slice(1).filter(l => !/^:::\s*$/.test(l)).join('\n')
-      return `<div class="cover-page">${inline(content).replace(/\n/g, '<br>')}</div>`
+      // Split by newlines and render each as a properly formatted block
+      let html = '<div class="cover-page">'
+      content.split('\n').forEach(line => {
+        if (!line.trim()) return
+        if (line.startsWith('# ')) html += `<h1 class="cover-title">${inline(line.slice(2))}</h1>`
+        else if (line.startsWith('## ')) html += `<h2 class="cover-subtitle">${inline(line.slice(3))}</h2>`
+        else if (line.startsWith('**')) html += `<p class="cover-meta">${inline(line)}</p>`
+        else html += `<p class="cover-meta">${inline(line)}</p>`
+      })
+      return html + '</div>'
     }
   },
   {
-    // Custom TOC Block
     test: (lines) => /^:::\s*toc/i.test(lines[0]),
     render: (lines) => {
       let items = lines.slice(1).filter(l => l.trim().startsWith('- ') && !/^:::\s*$/.test(l))
       let html = '<div class="toc-page"><h2 class="toc-heading">Table of Contents</h2><div class="toc-list">'
       items.forEach(item => {
         let text = item.replace(/^-\s+/, '')
-        // If it has a number like "1.1", separate it
         let match = text.match(/^(\d+(\.\d+)*)\s+(.*)$/)
         if (match) {
            html += `<div class="toc-row"><span class="toc-num">${match[1]}</span><span class="toc-text">${inline(match[3])}</span></div>`
@@ -55,24 +60,38 @@ const blockRules = [
     }
   },
   {
+    // Updated to handle multiple headings in the same block (no blank lines)
     test: (lines) => /^#{1,4}\s+\S/.test(lines[0]),
     render: (lines) => {
-      const m = lines[0].match(/^(#{1,4})\s+(.+)$/)
-      const lvl = m[1].length
-      const text = m[2]
-      const id = slugify(text.replace(/\d+(\.\d+)*\s*/, ''))
-      const num = text.match(/^(\d+(?:\.\d+)*)\s+(.+)$/)
-      
       let html = ''
-      if (num) {
-        html = `<h${lvl} id="${id}" class="numbered"><span class="secnum">${num[1]}</span>${inline(num[2])}</h${lvl}>`
-      } else {
-        html = `<h${lvl} id="${id}">${inline(text)}</h${lvl}>`
+      let currentParagraph = []
+
+      const flushParagraph = () => {
+        if (currentParagraph.length > 0) {
+          html += `<p>${inline(currentParagraph.join('\n')).replace(/\n/g, '<br>')}</p>`
+          currentParagraph = []
+        }
       }
-      
-      if (lines.length > 1) {
-        html += `<p>${inline(lines.slice(1).join('\n')).replace(/\n/g, '<br>')}</p>`
-      }
+
+      lines.forEach(line => {
+        const match = line.match(/^(#{1,4})\s+(.+)$/)
+        if (match) {
+          flushParagraph()
+          const lvl = match[1].length
+          const text = match[2]
+          const id = slugify(text.replace(/\d+(\.\d+)*\s*/, ''))
+          const num = text.match(/^(\d+(?:\.\d+)*)\s+(.+)$/)
+          
+          if (num) {
+            html += `<h${lvl} id="${id}" class="numbered"><span class="secnum">${num[1]}</span>${inline(num[2])}</h${lvl}>`
+          } else {
+            html += `<h${lvl} id="${id}">${inline(text)}</h${lvl}>`
+          }
+        } else {
+          currentParagraph.push(line)
+        }
+      })
+      flushParagraph()
       return html
     }
   },
