@@ -1600,3 +1600,78 @@ footer strong{color:var(--mute)}
   padding-bottom: 6px;
   border-bottom: 1px solid var(--line);
 }
+
+/* ================================================================
+   High-Contrast Ghost Buttons (Overrides old faint styles)
+   ================================================================ */
+.btn.ghost {
+  background: var(--card-2);
+  color: var(--ink);
+  border: 1px solid var(--line-2);
+}
+.btn.ghost:hover {
+  border-color: var(--acc);
+  color: var(--acc);
+}
+
+/* ================================================================
+   LegalMD Cover Page & TOC Styles
+   ================================================================ */
+.cover-page {
+  text-align: center;
+  padding: 40px 10px;
+  border-bottom: 2px solid var(--line);
+  margin-bottom: 30px;
+}
+.cover-page strong {
+  font-size: 1.1rem;
+  color: var(--mute);
+  display: block;
+  margin-top: 10px;
+}
+.cover-page br {
+  display: none; /* Let standard spacing handle it */
+}
+.cover-page::after {
+  content: '━━━━━━━━━━';
+  display: block;
+  color: var(--acc);
+  margin-top: 20px;
+  font-size: 1.5rem;
+  letter-spacing: 5px;
+}
+
+.toc-page {
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 30px;
+}
+.toc-heading {
+  font-family: var(--serif);
+  font-size: 1.4rem !important;
+  text-align: center;
+  border-bottom: none !important;
+  margin-bottom: 20px !important;
+}
+.toc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.toc-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--sans);
+  font-size: 0.95rem;
+}
+.toc-num {
+  font-weight: 700;
+  color: var(--acc);
+  min-width: 30px;
+}
+.toc-text {
+  color: var(--ink);
+}

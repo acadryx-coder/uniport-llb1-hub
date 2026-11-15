@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams, Navigate, useLocation } from 'react-router-dom'
 import { supabase } from '../lib/supabase.js'
 import { parseLegalMD } from '../lib/markdown.js'
@@ -33,7 +33,6 @@ export default function ResourceReader() {
         if (r) {
           supabase.from('resource_chapters').select('*').eq('resource_id', r.id).order('order_index').then(({ data: chaps }) => {
             if (chaps && chaps.length > 0) setChapters(chaps)
-            // Restore last read chapter if available
             const saved = getProgress(r.id)
             if (saved && saved.chapterIndex !== undefined && saved.chapterIndex < chaps.length) {
               setCurrentIndex(saved.chapterIndex)
@@ -47,7 +46,6 @@ export default function ResourceReader() {
     })
   }, [courseSlug, resourceSlug])
 
-  // Handle scroll tracking per chapter
   useEffect(() => {
     if (!resource || chapters.length === 0) return
     const el = bodyRef.current
@@ -55,9 +53,7 @@ export default function ResourceReader() {
 
     const saved = getProgress(resource.id)
     if (saved && saved.chapterIndex === currentIndex && typeof saved.scroll === 'number') {
-      requestAnimationFrame(() => {
-        el.scrollTop = saved.scroll
-      })
+      requestAnimationFrame(() => { el.scrollTop = saved.scroll })
     } else {
       el.scrollTop = 0
     }
@@ -99,16 +95,8 @@ export default function ResourceReader() {
   const currentChapter = chapters[currentIndex]
   const html = currentChapter ? parseLegalMD(currentChapter.content_md) : '<p>No content available.</p>'
 
-  const handleNext = () => {
-    if (currentIndex < chapters.length - 1) {
-      setCurrentIndex(currentIndex + 1)
-    }
-  }
-  const handlePrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1)
-    }
-  }
+  const handleNext = () => { if (currentIndex < chapters.length - 1) setCurrentIndex(currentIndex + 1) }
+  const handlePrev = () => { if (currentIndex > 0) setCurrentIndex(currentIndex - 1) }
 
   const dismissBanner = () => {
     setBannerDismissed(true)
@@ -117,6 +105,7 @@ export default function ResourceReader() {
 
   return (
     <div className="reader-page">
+      {/* HEADER: Fixed TOC button here */}
       <header className="reader-head">
         {user ? (
           <Link to={`/materials/${courseSlug}`} className="reader-back" aria-label="Back to course">
@@ -129,7 +118,14 @@ export default function ResourceReader() {
           <div className="reader-course">{course?.code} · {resource.type}</div>
           <div className="reader-name">{resource.name}</div>
         </div>
-        <div className="reader-pct">{pct}%</div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button onClick={() => setShowTOC(true)} className="btn sm" style={{ padding: '6px 10px', background: 'var(--card-2)', border: '1px solid var(--line-2)', color: 'var(--ink)' }}>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ marginRight: 4 }}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line></svg>
+            TOC
+          </button>
+          <div className="reader-pct">{pct}%</div>
+        </div>
       </header>
       <div className="reader-prog"><i style={{ width: `${pct}%` }} /></div>
 
@@ -154,12 +150,8 @@ export default function ResourceReader() {
         )}
       </div>
 
-      {/* Floating Buttons */}
+      {/* FLOATING BUTTONS (Only Quiz remains down here) */}
       <div style={{ position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))', right: 20, display: 'flex', flexDirection: 'column', gap: 12, zIndex: 50 }}>
-        <button className="floating-quiz-btn" style={{ background: 'var(--card)', color: 'var(--ink)', border: '1px solid var(--line-2)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }} onClick={() => setShowTOC(true)}>
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line></svg>
-          Contents
-        </button>
         {resource.quiz && (
           <button className="floating-quiz-btn" onClick={() => setShowQuiz(true)}>
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
@@ -168,14 +160,14 @@ export default function ResourceReader() {
         )}
       </div>
 
-      {/* Bottom Next/Prev Navigation */}
+      {/* BOTTOM NAVIGATION */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'var(--card)', borderTop: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 40 }}>
         <button onClick={handlePrev} disabled={currentIndex === 0} className="btn ghost sm" style={{ opacity: currentIndex === 0 ? 0.3 : 1 }}>← Previous</button>
         <span className="mute-2" style={{ fontSize: '0.8rem' }}>{currentIndex + 1} / {chapters.length}</span>
         <button onClick={handleNext} disabled={currentIndex === chapters.length - 1} className="btn btn-gold sm" style={{ opacity: currentIndex === chapters.length - 1 ? 0.3 : 1 }}>Next →</button>
       </div>
 
-      {/* TOC Modal */}
+      {/* TOC MODAL */}
       {showTOC && (
         <div className="modal-backdrop" onClick={() => setShowTOC(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '80vh', padding: 0 }}>

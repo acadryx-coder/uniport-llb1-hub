@@ -27,12 +27,40 @@ function inline(text) {
 
 const blockRules = [
   {
+    // Custom Cover Page Block
+    test: (lines) => /^:::\s*cover/i.test(lines[0]),
+    render: (lines) => {
+      // Extract content between ::: cover and :::
+      let content = lines.slice(1).filter(l => !/^:::\s*$/.test(l)).join('\n')
+      return `<div class="cover-page">${inline(content).replace(/\n/g, '<br>')}</div>`
+    }
+  },
+  {
+    // Custom TOC Block
+    test: (lines) => /^:::\s*toc/i.test(lines[0]),
+    render: (lines) => {
+      let items = lines.slice(1).filter(l => l.trim().startsWith('- ') && !/^:::\s*$/.test(l))
+      let html = '<div class="toc-page"><h2 class="toc-heading">Table of Contents</h2><div class="toc-list">'
+      items.forEach(item => {
+        let text = item.replace(/^-\s+/, '')
+        // If it has a number like "1.1", separate it
+        let match = text.match(/^(\d+(\.\d+)*)\s+(.*)$/)
+        if (match) {
+           html += `<div class="toc-row"><span class="toc-num">${match[1]}</span><span class="toc-text">${inline(match[3])}</span></div>`
+        } else {
+           html += `<div class="toc-row"><span class="toc-text">${inline(text)}</span></div>`
+        }
+      })
+      return html + '</div></div>'
+    }
+  },
+  {
     test: (lines) => /^#{1,4}\s+\S/.test(lines[0]),
     render: (lines) => {
       const m = lines[0].match(/^(#{1,4})\s+(.+)$/)
       const lvl = m[1].length
       const text = m[2]
-      const id = slugify(text.replace(/\d+(\.\d+)*\s*/, '')) // remove numbers for cleaner ids
+      const id = slugify(text.replace(/\d+(\.\d+)*\s*/, ''))
       const num = text.match(/^(\d+(?:\.\d+)*)\s+(.+)$/)
       
       let html = ''
