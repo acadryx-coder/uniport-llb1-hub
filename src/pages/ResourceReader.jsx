@@ -5,6 +5,7 @@ import { parseLegalMD } from '../lib/markdown.js'
 import { getProgress, saveProgress, useDocumentTitle } from '../lib/storage.js'
 import { useAuth, setPendingRedirect } from '../lib/auth.js'
 import QuizModal from '../components/QuizModal.jsx'
+import ThemeToggle from '../components/ThemeToggle.jsx'
 
 export default function ResourceReader() {
   const { courseSlug, resourceSlug } = useParams()
@@ -105,21 +106,25 @@ export default function ResourceReader() {
 
   return (
     <div className="reader-page">
-      {/* HEADER: Fixed TOC button here */}
+      {/* HEADER with Theme Toggle on the left */}
       <header className="reader-head">
-        {user ? (
-          <Link to={`/materials/${courseSlug}`} className="reader-back" aria-label="Back to course">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6" /></svg>
-          </Link>
-        ) : (
-          <div style={{ width: 36, flex: '0 0 36px' }} />
-        )}
-        <div className="reader-title-wrap">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '0 0 auto' }}>
+          <ThemeToggle />
+          {user ? (
+            <Link to={`/materials/${courseSlug}`} className="reader-back" aria-label="Back to course">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6" /></svg>
+            </Link>
+          ) : (
+            <div style={{ width: 36 }} />
+          )}
+        </div>
+        
+        <div className="reader-title-wrap" style={{ marginLeft: 8 }}>
           <div className="reader-course">{course?.code} · {resource.type}</div>
           <div className="reader-name">{resource.name}</div>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '0 0 auto' }}>
           <button onClick={() => setShowTOC(true)} className="btn sm" style={{ padding: '6px 10px', background: 'var(--card-2)', border: '1px solid var(--line-2)', color: 'var(--ink)' }}>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ marginRight: 4 }}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line></svg>
             TOC
@@ -135,7 +140,7 @@ export default function ResourceReader() {
             <strong>Preview Mode</strong>
             <span>Log in to unlock the full library.</span>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <Link to="/login" state={{ from: location.pathname }} className="btn sm">Log in</Link>
             <button onClick={dismissBanner} className="btn ghost sm">Dismiss</button>
           </div>
@@ -144,13 +149,12 @@ export default function ResourceReader() {
 
       <div className="reader-body" ref={bodyRef} style={{ paddingBottom: '100px' }}>
         {currentChapter ? (
-          <div className="doc" dangerouslySetInnerHTML={{ __html: html }} />
+          <div className="doc book-typography" dangerouslySetInnerHTML={{ __html: html }} />
         ) : (
           <div className="empty">No chapters found for this resource.</div>
         )}
       </div>
 
-      {/* FLOATING BUTTONS (Only Quiz remains down here) */}
       <div style={{ position: 'absolute', bottom: 'calc(24px + env(safe-area-inset-bottom))', right: 20, display: 'flex', flexDirection: 'column', gap: 12, zIndex: 50 }}>
         {resource.quiz && (
           <button className="floating-quiz-btn" onClick={() => setShowQuiz(true)}>
@@ -160,14 +164,12 @@ export default function ResourceReader() {
         )}
       </div>
 
-      {/* BOTTOM NAVIGATION */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'var(--card)', borderTop: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 40 }}>
         <button onClick={handlePrev} disabled={currentIndex === 0} className="btn ghost sm" style={{ opacity: currentIndex === 0 ? 0.3 : 1 }}>← Previous</button>
         <span className="mute-2" style={{ fontSize: '0.8rem' }}>{currentIndex + 1} / {chapters.length}</span>
         <button onClick={handleNext} disabled={currentIndex === chapters.length - 1} className="btn btn-gold sm" style={{ opacity: currentIndex === chapters.length - 1 ? 0.3 : 1 }}>Next →</button>
       </div>
 
-      {/* TOC MODAL */}
       {showTOC && (
         <div className="modal-backdrop" onClick={() => setShowTOC(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxHeight: '80vh', padding: 0 }}>

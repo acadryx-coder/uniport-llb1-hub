@@ -1745,3 +1745,70 @@ footer strong{color:var(--mute)}
   color: var(--ink);
   font-weight: 600;
 }
+
+/* ================================================================
+   Bestseller Book Typography
+   ================================================================ */
+.book-typography h1 {
+  font-family: var(--serif);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--acc);
+  margin: 10px 0 30px;
+  line-height: 1.2;
+  text-align: center;
+  position: relative;
+}
+.book-typography h1::after {
+  content: '❖';
+  display: block;
+  font-size: 1.2rem;
+  color: var(--mute-2);
+  margin-top: 16px;
+  font-weight: 400;
+}
+
+.book-typography p {
+  font-size: 1.05rem;
+  line-height: 1.85; /* Wider line height for reading */
+  margin-bottom: 1.2em;
+  text-align: justify; /* Book-style justification */
+  hyphens: auto;
+}
+
+/* Drop Cap for the first paragraph after the Chapter Title */
+.book-typography h1 + p::first-letter {
+  float: left;
+  font-size: 3.8em;
+  line-height: 0.85;
+  margin: 0.1em 0.12em 0 0;
+  color: var(--acc);
+  font-family: var(--serif);
+  font-weight: 700;
+}
+
+/* Make Lead Paragraphs distinct */
+.book-typography p.lead {
+  font-size: 1.15rem;
+  color: var(--ink);
+  font-style: italic;
+  text-align: center;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+/* Better Chapter Subheadings */
+.book-typography h2 {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  margin: 35px 0 15px;
+  color: var(--ink);
+  border-bottom: none;
+}
+.book-typography h3 {
+  font-family: var(--sans);
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  margin: 25px 0 10px;
+  color: var(--acc);
+}
