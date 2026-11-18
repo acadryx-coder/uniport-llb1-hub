@@ -7,6 +7,50 @@ import { useAuth, setPendingRedirect } from '../lib/auth.js'
 import QuizModal from '../components/QuizModal.jsx'
 import ThemeToggle from '../components/ThemeToggle.jsx'
 
+// Draggable Floating Login Icon Component
+function FloatingLogin({ onClick }) {
+  const [pos, setPos] = useState({ x: 16, y: 80 })
+  const [dragging, setDragging] = useState(false)
+  const [rel, setRel] = useState({ x: 0, y: 0 })
+
+  const onPointerDown = (e) => {
+    setDragging(true)
+    setRel({ x: e.clientX - pos.x, y: e.clientY - pos.y })
+    e.target.setPointerCapture(e.pointerId)
+  }
+  const onPointerMove = (e) => {
+    if (!dragging) return
+    setPos({ x: e.clientX - rel.x, y: e.clientY - rel.y })
+  }
+  const onPointerUp = (e) => {
+    setDragging(false)
+    e.target.releasePointerCapture(e.pointerId)
+  }
+
+  return (
+    <div
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onClick={onClick}
+      style={{
+        position: 'absolute', left: pos.x, top: pos.y,
+        width: 44, height: 44, borderRadius: '50%',
+        background: 'var(--acc)', color: '#fff',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.3)', cursor: dragging ? 'grabbing' : 'grab',
+        zIndex: 100, touchAction: 'none'
+      }}
+      title="Log in to save progress"
+    >
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+    </div>
+  )
+}
+
 export default function ResourceReader() {
   const { courseSlug, resourceSlug } = useParams()
   const [course, setCourse] = useState(null)
@@ -19,7 +63,9 @@ export default function ResourceReader() {
   const [pct, setPct] = useState(0)
   const [showQuiz, setShowQuiz] = useState(false)
   const [showTOC, setShowTOC] = useState(false)
-  const [bannerDismissed, setBannerDismissed] = useState(() => sessionStorage.getItem('llb1.previewDismissed') === 'true')
+  
+  // Use localStorage so the dismissal persists across sessions
+  const [bannerDismissed, setBannerDismissed] = useState(() => localStorage.getItem('llb1.previewDismissed') === 'true')
   
   const { user } = useAuth()
   const location = useLocation()
@@ -101,35 +147,31 @@ export default function ResourceReader() {
 
   const dismissBanner = () => {
     setBannerDismissed(true)
-    sessionStorage.setItem('llb1.previewDismissed', 'true')
+    localStorage.setItem('llb1.previewDismissed', 'true')
   }
 
   return (
     <div className="reader-page">
-      {/* HEADER with Theme Toggle on the left */}
       <header className="reader-head">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '0 0 auto' }}>
-          <ThemeToggle />
-          {user ? (
-            <Link to={`/materials/${courseSlug}`} className="reader-back" aria-label="Back to course">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6" /></svg>
-            </Link>
-          ) : (
-            <div style={{ width: 36 }} />
-          )}
-        </div>
+        {user ? (
+          <Link to={`/materials/${courseSlug}`} className="reader-back" aria-label="Back to course">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6" /></svg>
+          </Link>
+        ) : (
+          <div style={{ width: 36, flex: '0 0 36px' }} />
+        )}
         
-        <div className="reader-title-wrap" style={{ marginLeft: 8 }}>
-          <div className="reader-course">{course?.code} · {resource.type}</div>
+        <div className="reader-title-wrap" style={{ flex: 1, minWidth: 0 }}>
           <div className="reader-name">{resource.name}</div>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '0 0 auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '0 0 auto' }}>
           <button onClick={() => setShowTOC(true)} className="btn sm" style={{ padding: '6px 10px', background: 'var(--card-2)', border: '1px solid var(--line-2)', color: 'var(--ink)' }}>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" style={{ marginRight: 4 }}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line></svg>
             TOC
           </button>
           <div className="reader-pct">{pct}%</div>
+          <ThemeToggle />
         </div>
       </header>
       <div className="reader-prog"><i style={{ width: `${pct}%` }} /></div>
@@ -140,11 +182,15 @@ export default function ResourceReader() {
             <strong>Preview Mode</strong>
             <span>Log in to unlock the full library.</span>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginTop: 8 }}>
             <Link to="/login" state={{ from: location.pathname }} className="btn sm">Log in</Link>
             <button onClick={dismissBanner} className="btn ghost sm">Dismiss</button>
           </div>
         </div>
+      )}
+
+      {isPublicPreview && bannerDismissed && (
+        <FloatingLogin onClick={() => { setBannerDismissed(false); localStorage.removeItem('llb1.previewDismissed'); }} />
       )}
 
       <div className="reader-body" ref={bodyRef} style={{ paddingBottom: '100px' }}>

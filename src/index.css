@@ -1812,3 +1812,50 @@ footer strong{color:var(--mute)}
   margin: 25px 0 10px;
   color: var(--acc);
 }
+
+/* ================================================================
+   Typography Refinements
+   ================================================================ */
+.book-typography h1 {
+  font-size: 1.7rem !important;
+  margin: 10px 0 25px !important;
+}
+.book-typography p {
+  font-size: 0.95rem !important;
+  line-height: 1.65 !important;
+  text-align: justify !important;
+  hyphens: auto;
+  margin-bottom: 1em !important;
+}
+/* Fix the first line justification around the drop cap */
+.book-typography h1 + p {
+  text-align: justify;
+}
+.book-typography h1 + p::first-letter {
+  float: left;
+  font-size: 3.2em !important; /* Much smaller */
+  line-height: 0.85;
+  margin: 0.05em 0.1em 0 0 !important;
+  color: var(--acc);
+  font-family: var(--serif);
+  font-weight: 700;
+}
+
+/* Header Overrides */
+.reader-head {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  gap: 8px !important;
+}
+.reader-title-wrap {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.reader-name {
+  padding: 0 !important;
+  border: none !important;
+  font-size: 0.9rem !important;
+}
+.reader-course {
+  display: none !important; /* Hide the LAW 101 breadcrumb text */
+}
