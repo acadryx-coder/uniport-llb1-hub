@@ -1886,3 +1886,23 @@ footer strong{color:var(--mute)}
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
+/* Statute Callout Box (For ALL CAPS text) */
+.statute-callout {
+  background: var(--card-2);
+  border-left: 4px solid var(--acc);
+  border-radius: 0 8px 8px 0;
+  padding: 16px 20px;
+  margin: 24px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.statute-callout p {
+  text-align: left !important; /* Prevent ugly gaps in all-caps */
+  font-size: 0.85rem !important;
+  letter-spacing: 0.03em;
+  line-height: 1.6 !important;
+  color: var(--ink) !important;
+  font-family: var(--sans) !important;
+  margin: 0 !important;
+  font-weight: 600;
+}

@@ -59,7 +59,6 @@ const blockRules = [
     }
   },
   {
-    // FIXED: Now supports up to 6 hashes
     test: (lines) => /^#{1,6}\s+\S/.test(lines[0]),
     render: (lines) => {
       let html = ''
@@ -73,7 +72,6 @@ const blockRules = [
       }
 
       lines.forEach(line => {
-        // FIXED: Now supports up to 6 hashes
         const match = line.match(/^(#{1,6})\s+(.+)$/)
         if (match) {
           flushParagraph()
@@ -137,7 +135,8 @@ const blockRules = [
     }
   },
   {
-    test: (lines) => lines.every((l) => /^>\s?/.test(l)),
+    // FIXED: Now catches blockquotes even if only the first line has '>'
+    test: (lines) => /^>\s?/.test(lines[0]),
     render: (lines) => {
       let inner = lines.map((l) => l.replace(/^>\s?/, ''))
       let cite = ''
@@ -188,7 +187,17 @@ const blockRules = [
   },
   {
     test: () => true,
-    render: (lines) => `<p>${inline(lines.join('\n')).replace(/\n/g, '<br>')}</p>`
+    render: (lines) => {
+      const text = lines.join('\n')
+      // Detect if the entire paragraph is ALL CAPS and over 40 chars
+      const isAllCaps = text.length > 40 && text === text.toUpperCase() && /[A-Z]/.test(text)
+      
+      if (isAllCaps) {
+        return `<div class="statute-callout"><p>${inline(text).replace(/\n/g, '<br>')}</p></div>`
+      }
+      
+      return `<p>${inline(text).replace(/\n/g, '<br>')}</p>`
+    }
   }
 ]
 
