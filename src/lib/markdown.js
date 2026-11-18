@@ -10,6 +10,9 @@ function slugify(text) {
 
 function inline(text) {
   let s = escapeHtml(text)
+  // Catch long ALL CAPS blocks and wrap them in a span for styling
+  s = s.replace(/([A-Z0-9\s,.'"-]{50,})/g, '<span class="statute-callout-block">$1</span>')
+  
   s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>')
   s = s.replace(/==([^=\n]+)==/g, '<mark>$1</mark>')
   s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
@@ -135,7 +138,6 @@ const blockRules = [
     }
   },
   {
-    // FIXED: Now catches blockquotes even if only the first line has '>'
     test: (lines) => /^>\s?/.test(lines[0]),
     render: (lines) => {
       let inner = lines.map((l) => l.replace(/^>\s?/, ''))
@@ -187,29 +189,25 @@ const blockRules = [
   },
   {
     test: () => true,
-    render: (lines) => {
-      const text = lines.join('\n')
-      // Detect if the entire paragraph is ALL CAPS and over 40 chars
-      const isAllCaps = text.length > 40 && text === text.toUpperCase() && /[A-Z]/.test(text)
-      
-      if (isAllCaps) {
-        return `<div class="statute-callout"><p>${inline(text).replace(/\n/g, '<br>')}</p></div>`
-      }
-      
-      return `<p>${inline(text).replace(/\n/g, '<br>')}</p>`
-    }
+    render: (lines) => `<p>${inline(lines.join('\n')).replace(/\n/g, '<br>')}</p>`
   }
 ]
 
 export function parseLegalMD(md) {
   if (!md || typeof md !== 'string') return ''
   const footnotes = {}
-  let text = md.replace(/^\[\^([a-zA-Z0-9]+)\]:\s*(.+)$/gm, (m, id, ft) => {
+  
+  let text = md.replace(/\r\n/g, '\n')
+  // FORCE blockquotes to be on their own lines so they parse correctly
+  text = text.replace(/\n>\s/g, '\n\n> ')
+  text = text.replace(/^>\s/g, '\n\n> ')
+
+  text = text.replace(/^\[\^([a-zA-Z0-9]+)\]:\s*(.+)$/gm, (m, id, ft) => {
     footnotes[id] = ft.trim()
     return ''
   })
 
-  const blocks = text.replace(/\r\n/g, '\n').split(/\n{2,}/)
+  const blocks = text.split(/\n{2,}/)
   const out = []
   for (const block of blocks) {
     const lines = block.split('\n').filter((l) => l.trim().length)

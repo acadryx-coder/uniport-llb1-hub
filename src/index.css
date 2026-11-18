@@ -1906,3 +1906,20 @@ footer strong{color:var(--mute)}
   margin: 0 !important;
   font-weight: 600;
 }
+
+/* Inline ALL CAPS Callout Box */
+.statute-callout-block {
+  display: inline-block;
+  background: var(--card-2);
+  border-left: 4px solid var(--acc);
+  border-radius: 0 6px 6px 0;
+  padding: 10px 14px;
+  margin: 12px 0;
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.6;
+  text-align: left;
+  color: var(--ink);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
