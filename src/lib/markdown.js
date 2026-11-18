@@ -30,7 +30,6 @@ const blockRules = [
     test: (lines) => /^:::\s*cover/i.test(lines[0]),
     render: (lines) => {
       let content = lines.slice(1).filter(l => !/^:::\s*$/.test(l)).join('\n')
-      // Split by newlines and render each as a properly formatted block
       let html = '<div class="cover-page">'
       content.split('\n').forEach(line => {
         if (!line.trim()) return
@@ -60,8 +59,8 @@ const blockRules = [
     }
   },
   {
-    // Updated to handle multiple headings in the same block (no blank lines)
-    test: (lines) => /^#{1,4}\s+\S/.test(lines[0]),
+    // FIXED: Now supports up to 6 hashes
+    test: (lines) => /^#{1,6}\s+\S/.test(lines[0]),
     render: (lines) => {
       let html = ''
       let currentParagraph = []
@@ -74,7 +73,8 @@ const blockRules = [
       }
 
       lines.forEach(line => {
-        const match = line.match(/^(#{1,4})\s+(.+)$/)
+        // FIXED: Now supports up to 6 hashes
+        const match = line.match(/^(#{1,6})\s+(.+)$/)
         if (match) {
           flushParagraph()
           const lvl = match[1].length
