@@ -7,7 +7,6 @@ import { useAuth, setPendingRedirect } from '../lib/auth.js'
 import QuizModal from '../components/QuizModal.jsx'
 import ThemeToggle from '../components/ThemeToggle.jsx'
 
-// Draggable Floating Login Icon Component
 function FloatingLogin({ onClick }) {
   const [pos, setPos] = useState({ x: 16, y: 80 })
   const [dragging, setDragging] = useState(false)
@@ -64,7 +63,6 @@ export default function ResourceReader() {
   const [showQuiz, setShowQuiz] = useState(false)
   const [showTOC, setShowTOC] = useState(false)
   
-  // Use localStorage so the dismissal persists across sessions
   const [bannerDismissed, setBannerDismissed] = useState(() => localStorage.getItem('llb1.previewDismissed') === 'true')
   
   const { user } = useAuth()
@@ -79,9 +77,17 @@ export default function ResourceReader() {
         setResource(r)
         if (r) {
           supabase.from('resource_chapters').select('*').eq('resource_id', r.id).order('order_index').then(({ data: chaps }) => {
-            if (chaps && chaps.length > 0) setChapters(chaps)
+            let loadedChapters = chaps || []
+            
+            // FALLBACK: If no chapters exist, but there is markdown content, treat it as a single page
+            if (loadedChapters.length === 0 && r.md) {
+              loadedChapters = [{ id: 'single-page', title: r.name, content_md: r.md, order_index: 1 }]
+            }
+
+            setChapters(loadedChapters)
+
             const saved = getProgress(r.id)
-            if (saved && saved.chapterIndex !== undefined && saved.chapterIndex < chaps.length) {
+            if (saved && saved.chapterIndex !== undefined && saved.chapterIndex < loadedChapters.length) {
               setCurrentIndex(saved.chapterIndex)
             }
             setLoading(false)
@@ -197,7 +203,7 @@ export default function ResourceReader() {
         {currentChapter ? (
           <div className="doc book-typography" dangerouslySetInnerHTML={{ __html: html }} />
         ) : (
-          <div className="empty">No chapters found for this resource.</div>
+          <div className="empty">No content found for this resource.</div>
         )}
       </div>
 
@@ -212,7 +218,7 @@ export default function ResourceReader() {
 
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'var(--card)', borderTop: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 40 }}>
         <button onClick={handlePrev} disabled={currentIndex === 0} className="btn ghost sm" style={{ opacity: currentIndex === 0 ? 0.3 : 1 }}>← Previous</button>
-        <span className="mute-2" style={{ fontSize: '0.8rem' }}>{currentIndex + 1} / {chapters.length}</span>
+        <span className="mute-2" style={{ fontSize: '0.8rem' }}>{chapters.length > 1 ? `${currentIndex + 1} / ${chapters.length}` : 'Single Page'}</span>
         <button onClick={handleNext} disabled={currentIndex === chapters.length - 1} className="btn btn-gold sm" style={{ opacity: currentIndex === chapters.length - 1 ? 0.3 : 1 }}>Next →</button>
       </div>
 

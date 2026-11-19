@@ -1,0 +1,103 @@
+=== FILE: ./vercel.json ===
+{
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(facebookexternalhit|Twitterbot|WhatsApp|Discordbot|TelegramBot|LinkedInBot|Slackbot|iMessage|Pinterest).*"
+        }
+      ],
+      "destination": "/api/og?path=:path*"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+
+=== FILE: ./api/og.js ===
+export const config = { runtime: 'edge' }
+
+const SUPABASE_URL = 'https://ifduqrezrhygmxyjkdll.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_G0lVe0ekIqio7CTYR9z-pQ_ZgfmTd2Y'
+
+export default async function handler(req) {
+  const { searchParams } = new URL(req.url)
+  const path = '/' + (searchParams.get('path') || '').replace(/\/$/, '')
+
+  const host = req.headers.get('host') || 'uniport-llb1-hub.vercel.app'
+  const proto = host.includes('localhost') ? 'http' : 'https'
+  const origin = `${proto}://${host}`
+
+  const meta = await resolveMeta(path, origin)
+
+  const html = `<!DOCTYPE html>
+<html><head>
+  <meta charset="utf-8">
+  <title>${esc(meta.title)}</title>
+  <meta name="description" content="${esc(meta.description)}">
+  <meta property="og:title" content="${esc(meta.title)}">
+  <meta property="og:description" content="${esc(meta.description)}">
+  <meta property="og:image" content="${meta.image}">
+  <meta property="og:url" content="${origin}${path}">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+</head><body></body></html>`
+
+  return new Response(html, {
+    headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=3600' }
+  })
+}
+
+function esc(s) {
+  return String(s || '').replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]))
+}
+
+async function resolveMeta(path, origin) {
+  const img = `${origin}/og-default.png`
+  const fallback = {
+    title: 'LLB 1 Hub · UNIPORT',
+    description: 'The official academic hub for LLB 1, Faculty of Law, University of Port Harcourt.',
+    image: img
+  }
+
+  // Check if it's a material link: /materials/:courseSlug/:resourceSlug
+  const m = path.match(/^\/materials\/([^/]+)\/([^/]+)$/)
+  if (m) {
+    const courseSlug = m[1]
+    const resourceSlug = m[2]
+
+    try {
+      // Fetch the actual resource from Supabase
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/resources?course_slug=eq.${courseSlug}&slug=eq.${resourceSlug}&select=name,md,type`, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      })
+      const data = await res.json()
+      
+      if (data && data.length > 0) {
+        const resource = data[0]
+        // Clean up the markdown to create a short description
+        let snippet = resource.md 
+          ? resource.md.replace(/[#*`_]/g, '').replace(/\n+/g, ' ').substring(0, 150).trim() + '...'
+          : 'Read this resource on the LLB 1 Hub.'
+          
+        return {
+          title: `${resource.name} · ${courseSlug.toUpperCase()}`,
+          description: snippet,
+          image: img
+        }
+      }
+    } catch (e) {
+      console.error("Supabase fetch failed", e)
+    }
+  }
+
+  return fallback
+}
+
