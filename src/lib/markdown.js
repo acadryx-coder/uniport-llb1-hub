@@ -10,9 +10,7 @@ function slugify(text) {
 
 function inline(text) {
   let s = escapeHtml(text)
-  // Catch long ALL CAPS blocks and wrap them in a span for styling
   s = s.replace(/([A-Z0-9\s,.'"-]{50,})/g, '<span class="statute-callout-block">$1</span>')
-  
   s = s.replace(/`([^`\n]+)`/g, '<code>$1</code>')
   s = s.replace(/==([^=\n]+)==/g, '<mark>$1</mark>')
   s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
@@ -38,7 +36,6 @@ const blockRules = [
         if (!line.trim()) return
         if (line.startsWith('# ')) html += `<h1 class="cover-title">${inline(line.slice(2))}</h1>`
         else if (line.startsWith('## ')) html += `<h2 class="cover-subtitle">${inline(line.slice(3))}</h2>`
-        else if (line.startsWith('**')) html += `<p class="cover-meta">${inline(line)}</p>`
         else html += `<p class="cover-meta">${inline(line)}</p>`
       })
       return html + '</div>'
@@ -59,6 +56,13 @@ const blockRules = [
         }
       })
       return html + '</div></div>'
+    }
+  },
+  {
+    test: (lines) => /^:::\s*allcaps/i.test(lines[0]),
+    render: (lines) => {
+      let content = lines.slice(1).filter(l => !/^:::\s*$/.test(l)).join('\n')
+      return `<div class="allcaps-header">${inline(content).replace(/\n/g, '<br>')}</div>`
     }
   },
   {
@@ -198,7 +202,6 @@ export function parseLegalMD(md) {
   const footnotes = {}
   
   let text = md.replace(/\r\n/g, '\n')
-  // FORCE blockquotes to be on their own lines so they parse correctly
   text = text.replace(/\n>\s/g, '\n\n> ')
   text = text.replace(/^>\s/g, '\n\n> ')
 

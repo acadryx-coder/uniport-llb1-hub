@@ -1923,3 +1923,27 @@ footer strong{color:var(--mute)}
   color: var(--ink);
   box-shadow: 0 2px 6px rgba(0,0,0,0.04);
 }
+
+/* Only trigger drop cap on long paragraphs */
+.book-typography h1 + p::first-letter {
+  float: none;
+  font-size: inherit;
+  color: inherit;
+  margin: 0;
+  font-family: inherit;
+}
+.book-typography h1 + p:not(:empty)::first-letter {
+  /* We'll let the specific JS handle drop caps if we really want, but for now, let's just make it elegant without */
+}
+
+.allcaps-header {
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--mute);
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--line);
+}
