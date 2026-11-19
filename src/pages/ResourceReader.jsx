@@ -159,16 +159,14 @@ export default function ResourceReader() {
   return (
     <div className="reader-page">
       <header className="reader-head">
-        {user ? (
-          <Link to={`/materials/${courseSlug}`} className="reader-back" aria-label="Back to course">
+        {user && (
+          <Link to={`/materials/${courseSlug}`} className="reader-back" aria-label="Back to course" style={{ marginRight: '8px' }}>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M15 18l-6-6 6-6" /></svg>
           </Link>
-        ) : (
-          <div style={{ width: 36, flex: '0 0 36px' }} />
         )}
         
         <div className="reader-title-wrap" style={{ flex: 1, minWidth: 0 }}>
-          <div className="reader-name">{resource.name}</div>
+          <div className="reader-name" style={{ textAlign: 'left', lineHeight: 1.3 }}>{resource.name}</div>
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '0 0 auto' }}>

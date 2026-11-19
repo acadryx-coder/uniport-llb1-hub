@@ -1947,3 +1947,18 @@ footer strong{color:var(--mute)}
   padding-bottom: 15px;
   border-bottom: 1px solid var(--line);
 }
+
+/* Header Layout Fix */
+.reader-head {
+  padding: 12px 16px !important; /* Uniform padding */
+  gap: 12px !important;
+}
+.reader-title-wrap {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+.reader-name {
+  font-size: 0.95rem !important;
+  font-weight: 600;
+  color: var(--ink);
+}
